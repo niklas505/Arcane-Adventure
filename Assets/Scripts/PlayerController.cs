@@ -9,16 +9,50 @@ public class PlayerController : MonoBehaviour {
     private string IS_WALKING = "isWalking";
     public Camera mainCamera;
     public Vector3 moveDir = new Vector3 (0f,0f,0f);
+    public bool isFighting;
+    public List<string> earnedCards;
+    public List<string> earnedCreatures;
+    public List<string> selectedCreatures;
+    public int health = 1;
+    public int hits;
+    public int shoots;
+    public int stagesCleared;
+
     private void Start() {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
         animator = GetComponent<Animator>();
     }
     private void Update() {
+        HandleCursor();
         HandleMovementInput();
+        HandleShootInput();
+        CheckDeath();
+    }
+
+    void OnEnable() {
+        hits = PlayerPrefs.GetInt("hits", 0);
+        shoots = PlayerPrefs.GetInt("shoots", 0);
+        stagesCleared = PlayerPrefs.GetInt("stagesCleared", 0);
+    }
+
+    void OnDisable() {
+        PlayerPrefs.SetInt("hits", hits);
+        PlayerPrefs.SetInt("shoots", shoots);
+        PlayerPrefs.SetInt("stagesCleared", stagesCleared);
+    }
+
+    void HandleCursor() {
+        if (isFighting) {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
     void HandleMovementInput() {
+        if (isFighting) return;
         float vertical = 0f;
         float horizontal = 0f;
 
@@ -62,40 +96,18 @@ public class PlayerController : MonoBehaviour {
         }
         float rotateSpeed = 10f;
         transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
-        /*Vector2 inputVector = new Vector2(0, 0);
+    }
 
-        if (Input.GetKey(KeyCode.W)) {
-            inputVector.y = +1;
+    void HandleShootInput() {
+        if (Input.GetButton("Fire1")) {
+            PlayerGun.Instance.Shoot();
         }
-        if (Input.GetKey(KeyCode.S)) {
-            inputVector.y = -1;
-        }
+    }
 
-        if (Input.GetKey(KeyCode.A)) {
-            inputVector.x = -1;
+    private void CheckDeath() {
+        if (health <= 0) {
+            print("You died!");
+            SceneManager.LoadScene("ScoreboardScene");
         }
-
-        if (Input.GetKey(KeyCode.D)) {
-            inputVector.x = +1;
-        }
-
-        if (Input.GetKey(KeyCode.D)|| Input.GetKey(KeyCode.W)|| Input.GetKey(KeyCode.S)|| Input.GetKey(KeyCode.A)) {
-            animator.SetBool(IS_WALKING, true);
-        }
-        else {
-            animator.SetBool(IS_WALKING, false);
-        }
-
-        
-
-        inputVector = inputVector.normalized;
-        moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
-        bool canMove = !Physics.Raycast(transform.position, moveDir, .7f);
-        if (canMove) {
-            transform.position += moveDir * Time.deltaTime * movSpeed;
-        }
-        
-        float rotateSpeed = 10f;
-        transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);*/
     }
 }
